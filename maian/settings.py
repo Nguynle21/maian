@@ -107,6 +107,8 @@ AXES_FAILURE_LIMIT = 5
 AXES_COOLOFF_TIME = timedelta(hours=1)
 AXES_LOCKOUT_PARAMETERS = ["username"]  # the whole office shares one IP
 AXES_RESET_ON_SUCCESS = True
+# Username-only lockout is deliberate (see AXES_LOCKOUT_PARAMETERS); silence the IP warning.
+SILENCED_SYSTEM_CHECKS = ["axes.W006"]
 AUTH_PASSWORD_VALIDATORS = [
     {"NAME": "django.contrib.auth.password_validation.UserAttributeSimilarityValidator"},
     {"NAME": "django.contrib.auth.password_validation.MinimumLengthValidator", "OPTIONS": {"min_length": 12}},
