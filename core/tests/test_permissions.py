@@ -66,3 +66,13 @@ def test_staff_cannot_archive_household_member_in_code(make_user):
     member = HouseholdMember.objects.create(customer=customer, relationship=Relationship.SPOUSE)
     with pytest.raises(PermissionDenied):
         archive(member, staff)
+
+
+def test_audit_events_cannot_be_changed_or_removed_in_bulk(make_user):
+    admin_user = make_user("admin@example.com", ADMIN_GROUP)
+    archive(Customer.objects.create(first_name="Lan"), admin_user)
+    with pytest.raises(ValueError):
+        AuditEvent.objects.all().update(detail="edited")
+    with pytest.raises(ValueError):
+        AuditEvent.objects.all().delete()
+    assert AuditEvent.objects.get().detail == ""

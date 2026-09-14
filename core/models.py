@@ -62,6 +62,16 @@ class ArchivableModel(models.Model):
         base_manager_name = "all_objects"
 
 
+class AuditEventQuerySet(models.QuerySet):
+    """Blocks bulk mutation so the append-only guard can't be bypassed via .update()/.delete()."""
+
+    def update(self, *args, **kwargs):
+        raise ValueError("AuditEvent rows are append-only")
+
+    def delete(self, *args, **kwargs):
+        raise ValueError("AuditEvent rows are append-only")
+
+
 class AuditEvent(models.Model):
     """Append-only record of meaningful actions (ADR-0010). Never updated or removed."""
 
@@ -77,6 +87,8 @@ class AuditEvent(models.Model):
     target_id = models.CharField(max_length=50)
     detail = models.CharField(max_length=255, blank=True)
     created_at = models.DateTimeField(auto_now_add=True)
+
+    objects = AuditEventQuerySet.as_manager()
 
     class Meta:
         ordering = ["-created_at"]
