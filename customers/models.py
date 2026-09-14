@@ -119,7 +119,7 @@ class Customer(ArchivableModel):
             missing.append("Immigration status")
         if self.household_income is None:
             missing.append("Household income")
-        if self.pk and hasattr(self, "documents") and not self.documents.exists():
+        if self.pk and not self.documents.exists():
             missing.append("Health plan document in the Vault")
         return missing
 

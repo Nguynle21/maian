@@ -6,6 +6,7 @@ from core.archive import archive
 from core.models import AuditEvent
 from core.roles import ADMIN_GROUP, STAFF_GROUP, is_admin
 from customers.models import Customer, HouseholdMember, Relationship
+from vault.models import VaultDocument
 
 
 def test_anonymous_user_is_sent_to_login(client, db):
@@ -100,3 +101,16 @@ def test_staff_can_open_intake_and_record(make_user, login_verified):
     customer = Customer.objects.create(first_name="Lan")
     assert client.get("/customers/new/").status_code == 200
     assert client.get(f"/customers/{customer.pk}/").status_code == 200
+
+
+def test_staff_cannot_archive_vault_document(make_user, login_verified):
+    staff = make_user("staff@example.com", STAFF_GROUP)
+    client = login_verified(staff)
+    customer = Customer.objects.create(first_name="Lan")
+    doc = VaultDocument.objects.create(
+        customer=customer, file="customers/1/test.pdf", original_filename="plan.pdf",
+        content_type="application/pdf", size_bytes=10, uploaded_by=staff,
+    )
+    response = client.post(f"/vault/{doc.pk}/archive/")
+    assert response.status_code == 403
+    assert VaultDocument.objects.filter(pk=doc.pk).exists()

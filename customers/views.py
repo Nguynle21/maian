@@ -40,7 +40,7 @@ def customer_detail(request, pk):
     )
     return render(request, "customers/detail.html", {
         "customer": customer,
-        "documents": [],
+        "documents": customer.documents.all(),
         "missing": customer.missing_items(),
         "duplicates": duplicates,
         "upload_form": VaultUploadForm(),

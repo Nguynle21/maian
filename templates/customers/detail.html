@@ -46,7 +46,25 @@
   </table>
 </div>
 
-{% block vault %}{% endblock %}
+<div class="card">
+  <h2>Vault</h2>
+  <table>
+    <thead><tr><th>File</th><th>Uploaded</th><th>By</th><th></th></tr></thead>
+    <tbody>
+    {% for d in documents %}
+      <tr>
+        <td><a href="{% url 'vault:download' d.pk %}">{{ d.original_filename }}</a></td>
+        <td>{{ d.uploaded_at|date:"m/d/Y" }}</td><td>{{ d.uploaded_by }}</td>
+        <td>{% if is_admin %}<form method="post" action="{% url 'vault:archive' d.pk %}">{% csrf_token %}<button class="danger">Archive</button></form>{% endif %}</td>
+      </tr>
+    {% empty %}<tr><td colspan="4" class="muted">No documents yet.</td></tr>{% endfor %}
+    </tbody>
+  </table>
+  <form method="post" action="{% url 'vault:upload' customer.pk %}" enctype="multipart/form-data" style="margin-top:.75rem">
+    {% csrf_token %}{% include "customers/_field.html" with field=upload_form.file %}
+    <button type="submit" class="secondary">Upload</button>
+  </form>
+</div>
 
 {% if is_admin %}
 <form method="post" action="{% url 'customers:archive' customer.pk %}">{% csrf_token %}
