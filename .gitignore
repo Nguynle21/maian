@@ -1,0 +1,27 @@
+# Secrets — never commit
+.env
+.env.*
+!.env.example
+
+# Python
+__pycache__/
+*.py[cod]
+.venv/
+venv/
+
+# Django
+/staticfiles/
+/media/
+*.sqlite3
+
+# Data files — real customer data never lives in the repo
+*.xlsx
+*.xls
+*.csv
+*.dump
+*.sql
+
+# OS / editors
+.DS_Store
+.idea/
+.vscode/
