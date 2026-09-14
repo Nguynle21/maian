@@ -1,6 +1,11 @@
+import pytest
 from django.conf import settings
+from django.core.exceptions import PermissionDenied
 
+from core.archive import archive
+from core.models import AuditEvent
 from core.roles import ADMIN_GROUP, STAFF_GROUP, is_admin
+from customers.models import Customer, HouseholdMember, Relationship
 
 
 def test_anonymous_user_is_sent_to_login(client, db):
@@ -32,3 +37,32 @@ def test_staff_cannot_open_user_management(make_user, login_verified):
     client = login_verified(make_user("staff@example.com", STAFF_GROUP))
     response = client.get(f"/{settings.ADMIN_PATH}core/user/")
     assert response.status_code != 200
+
+
+def test_staff_cannot_archive_customer_in_code(make_user):
+    staff = make_user("staff@example.com", STAFF_GROUP)
+    customer = Customer.objects.create(first_name="Lan")
+    with pytest.raises(PermissionDenied):
+        archive(customer, staff)
+    assert Customer.objects.filter(pk=customer.pk).exists()
+    assert not AuditEvent.objects.exists()
+
+
+def test_admin_archive_hides_customer_and_logs_it(make_user):
+    admin_user = make_user("admin@example.com", ADMIN_GROUP)
+    customer = Customer.objects.create(first_name="Lan")
+    archive(customer, admin_user)
+    assert not Customer.objects.filter(pk=customer.pk).exists()
+    assert Customer.all_objects.filter(pk=customer.pk).exists()
+    event = AuditEvent.objects.get()
+    assert (event.actor, event.action, event.target_type, event.target_id) == (
+        admin_user, AuditEvent.Action.ARCHIVE, "customer", str(customer.pk)
+    )
+
+
+def test_staff_cannot_archive_household_member_in_code(make_user):
+    staff = make_user("staff@example.com", STAFF_GROUP)
+    customer = Customer.objects.create(first_name="Lan")
+    member = HouseholdMember.objects.create(customer=customer, relationship=Relationship.SPOUSE)
+    with pytest.raises(PermissionDenied):
+        archive(member, staff)

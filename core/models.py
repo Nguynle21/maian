@@ -38,3 +38,53 @@ class User(AbstractUser):
 
     def __str__(self):
         return self.get_full_name() or self.email
+
+
+class ActiveManager(models.Manager):
+    def get_queryset(self):
+        return super().get_queryset().filter(archived_at__isnull=True)
+
+
+class ArchivableModel(models.Model):
+    """Soft delete (ADR-0011). `objects` hides archived rows everywhere by default;
+    `all_objects` is for Django admin and restore only."""
+
+    archived_at = models.DateTimeField(null=True, blank=True)
+    archived_by = models.ForeignKey(
+        settings.AUTH_USER_MODEL, null=True, blank=True, on_delete=models.PROTECT, related_name="+"
+    )
+
+    objects = ActiveManager()
+    all_objects = models.Manager()
+
+    class Meta:
+        abstract = True
+        base_manager_name = "all_objects"
+
+
+class AuditEvent(models.Model):
+    """Append-only record of meaningful actions (ADR-0010). Never updated or removed."""
+
+    class Action(models.TextChoices):
+        ARCHIVE = "archive"
+        RESTORE = "restore"
+        USER_CREATED = "user_created"
+        USER_CHANGED = "user_changed"
+
+    actor = models.ForeignKey(settings.AUTH_USER_MODEL, null=True, on_delete=models.PROTECT, related_name="+")
+    action = models.CharField(max_length=40, choices=Action.choices)
+    target_type = models.CharField(max_length=50)
+    target_id = models.CharField(max_length=50)
+    detail = models.CharField(max_length=255, blank=True)
+    created_at = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        ordering = ["-created_at"]
+
+    def save(self, *args, **kwargs):
+        if self.pk is not None:
+            raise ValueError("AuditEvent rows are append-only")
+        super().save(*args, **kwargs)
+
+    def delete(self, *args, **kwargs):
+        raise ValueError("AuditEvent rows are append-only")
