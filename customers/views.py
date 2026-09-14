@@ -54,11 +54,12 @@ def duplicates_check(request):
         dob = date.fromisoformat(request.POST.get("date_of_birth", ""))
     except ValueError:
         dob = None
+    exclude = request.GET.get("exclude", "")
     matches = find_possible_duplicates(
         phones=[request.POST.get("phone_primary"), request.POST.get("phone_secondary")],
         last_name=request.POST.get("last_name", ""),
         date_of_birth=dob,
-        exclude_pk=request.GET.get("exclude") or None,
+        exclude_pk=int(exclude) if exclude.isdigit() else None,
     )
     return render(request, "customers/_duplicates.html", {"duplicates": matches})
 
