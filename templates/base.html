@@ -1,0 +1,29 @@
+{% load static %}<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>{% block title %}Maian{% endblock %}</title>
+  <link rel="stylesheet" href="{% static 'app.css' %}">
+  <script src="{% static 'htmx.min.js' %}" defer></script>
+</head>
+<body hx-headers='{"X-CSRFToken": "{{ csrf_token }}"}'>
+  {% if user.is_authenticated %}
+  <header class="topbar">
+    <a class="brand" href="{% url 'customers:list' %}">Maian</a>
+    <nav>
+      <a href="{% url 'customers:list' %}">Customers</a>
+      <a href="{% url 'customers:new' %}">New customer</a>
+      {% if is_admin and user.is_staff %}<a href="/{{ admin_path }}">Admin</a>{% endif %}
+    </nav>
+    <form method="post" action="{% url 'logout' %}" class="logout">
+      {% csrf_token %}<span>{{ user.email }}</span> <button type="submit" class="link">Log out</button>
+    </form>
+  </header>
+  {% endif %}
+  <main>
+    {% for message in messages %}<p class="flash {{ message.tags }}">{{ message }}</p>{% endfor %}
+    {% block main %}{% block content %}{% endblock %}{% endblock %}
+  </main>
+</body>
+</html>
