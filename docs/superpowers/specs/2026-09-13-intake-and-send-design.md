@@ -78,7 +78,7 @@ default manager that excludes archived rows (ADR-0011).
 | gender | choice | |
 | date_of_birth | date | |
 | phone | text | normalized |
-| immigration_status | choice | shown for spouse only |
+| immigration_status | choice | same choices as Customer; shown for spouse and dependent |
 | public_coverage | choice: none, chip, medicaid, medicare | shown for dependent only |
 | linked_customer | FK Customer | set when the member gets their own Customer record |
 | archived_at | datetime | |

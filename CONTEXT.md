@@ -34,7 +34,8 @@ is ever stored.
 **Household Member** — a spouse or dependent attached to a Customer. One entity with a
 `relationship` field (`spouse` | `dependent`), not separate spouse and dependent types.
 Dependents carry a **Public Coverage** value (`none` | `chip` | `medicaid` | `medicare`) —
-dependents include children and elderly parents. Spouses carry an immigration status. A Household Member may later be linked to their own
+dependents include children and elderly parents. Every Household Member carries an
+immigration status. A Household Member may later be linked to their own
 Customer record; they are never duplicated.
 
 **Product** — a line of coverage: Health, Dental, Travel. Stored as a database row, not a
