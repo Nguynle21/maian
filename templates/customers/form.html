@@ -1,0 +1,82 @@
+{% extends "base.html" %}
+{% block title %}{% if is_new %}New customer{% else %}Edit {{ customer }}{% endif %} · Maian{% endblock %}
+{% block content %}
+<h1>{% if is_new %}New customer{% else %}Edit {{ customer }}{% endif %}</h1>
+<form method="post" enctype="multipart/form-data">
+  {% csrf_token %}
+  <div id="duplicate-warning"></div>
+
+  <details class="card" open>
+    <summary>Customer</summary>
+    <div class="grid"
+         hx-post="{% url 'customers:duplicates' %}{% if customer.pk %}?exclude={{ customer.pk }}{% endif %}"
+         hx-trigger="change"
+         hx-target="#duplicate-warning"
+         hx-include="[name=phone_primary],[name=phone_secondary],[name=last_name],[name=date_of_birth]">
+      {% include "customers/_field.html" with field=form.first_name %}
+      {% include "customers/_field.html" with field=form.middle_name %}
+      {% include "customers/_field.html" with field=form.last_name %}
+      {% include "customers/_field.html" with field=form.gender %}
+      {% include "customers/_field.html" with field=form.date_of_birth %}
+      {% include "customers/_field.html" with field=form.email %}
+      {% include "customers/_field.html" with field=form.phone_primary %}
+      {% include "customers/_field.html" with field=form.phone_secondary %}
+      {% include "customers/_field.html" with field=form.preferred_language %}
+      {% include "customers/_field.html" with field=form.immigration_status %}
+      {% include "customers/_field.html" with field=form.household_income %}
+      {% include "customers/_field.html" with field=form.emergency_contact_name %}
+      {% include "customers/_field.html" with field=form.emergency_contact_phone %}
+    </div>
+  </details>
+
+  <details class="card" open>
+    <summary>Residential address</summary>
+    <div class="grid">
+      {% include "customers/_field.html" with field=form.res_street %}
+      {% include "customers/_field.html" with field=form.res_apt %}
+      {% include "customers/_field.html" with field=form.res_city %}
+      {% include "customers/_field.html" with field=form.res_state %}
+      {% include "customers/_field.html" with field=form.res_zip %}
+    </div>
+    <p><label>{{ form.mailing_same_as_residential }} {{ form.mailing_same_as_residential.label }}</label></p>
+  </details>
+
+  <details class="card" {% if not form.instance.mailing_same_as_residential %}open{% endif %}>
+    <summary>Mailing address (only if different)</summary>
+    <div class="grid">
+      {% include "customers/_field.html" with field=form.mail_street %}
+      {% include "customers/_field.html" with field=form.mail_apt %}
+      {% include "customers/_field.html" with field=form.mail_city %}
+      {% include "customers/_field.html" with field=form.mail_state %}
+      {% include "customers/_field.html" with field=form.mail_zip %}
+    </div>
+  </details>
+
+  <details class="card" open>
+    <summary>Spouse</summary>
+    {{ spouse_formset.management_form }}{{ spouse_formset.non_form_errors }}
+    {% for member_form in spouse_formset %}
+      <div class="grid">{{ member_form.id }}{% for field in member_form.visible_fields %}{% include "customers/_field.html" %}{% endfor %}</div>
+    {% endfor %}
+  </details>
+
+  <details class="card" open>
+    <summary>Dependents</summary>
+    {{ dependent_formset.management_form }}
+    {% for member_form in dependent_formset %}
+      <div class="grid member">{{ member_form.id }}{% for field in member_form.visible_fields %}{% include "customers/_field.html" %}{% endfor %}</div>
+    {% endfor %}
+    <p class="muted">More dependents? Save, then edit again to get more blank rows.</p>
+  </details>
+
+  <details class="card" open>
+    <summary>Vault</summary>
+    {% include "customers/_field.html" with field=upload_form.file %}
+  </details>
+
+  <div class="actions">
+    <button type="submit">Save</button>
+    {% if customer.pk %}<a href="{% url 'customers:detail' customer.pk %}">Cancel</a>{% endif %}
+  </div>
+</form>
+{% endblock %}

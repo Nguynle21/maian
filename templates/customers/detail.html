@@ -1,0 +1,56 @@
+{% extends "base.html" %}{% load customer_tags %}
+{% block title %}{{ customer }} · Maian{% endblock %}
+{% block content %}
+<h1>{{ customer }}</h1>
+<p><a class="button" href="{% url 'customers:edit' customer.pk %}">Edit</a></p>
+
+{% include "customers/_duplicates.html" %}
+
+<div class="card">
+  <h2>Checklist</h2>
+  {% if missing %}<ul class="checklist">{% for item in missing %}<li>{{ item }}</li>{% endfor %}</ul>
+  {% else %}<p class="checklist complete">Complete.</p>{% endif %}
+  {% if customer.sms_opt_out %}<p class="warning">Opted out of SMS on {{ customer.sms_opt_out_at|date:"m/d/Y" }}. Call instead.</p>{% endif %}
+</div>
+
+<div class="card">
+  <dl class="facts">
+    <dt>Date of birth</dt><dd>{{ customer.date_of_birth|date:"m/d/Y"|default:"—" }}</dd>
+    <dt>Gender</dt><dd>{{ customer.get_gender_display|default:"—" }}</dd>
+    <dt>Primary phone</dt><dd>{{ customer.phone_primary|phone|default:"—" }}</dd>
+    <dt>Second phone</dt><dd>{{ customer.phone_secondary|phone|default:"—" }}</dd>
+    <dt>Email</dt><dd>{{ customer.email|default:"—" }}</dd>
+    <dt>Emergency contact</dt><dd>{{ customer.emergency_contact_name|default:"—" }} {{ customer.emergency_contact_phone|phone }}</dd>
+    <dt>Residential</dt><dd>{{ customer.res_street }} {{ customer.res_apt }}, {{ customer.res_city }} {{ customer.res_state }} {{ customer.res_zip }}</dd>
+    <dt>Mailing</dt><dd>{% if customer.mailing_same_as_residential %}Same as residential{% else %}{{ customer.mail_street }} {{ customer.mail_apt }}, {{ customer.mail_city }} {{ customer.mail_state }} {{ customer.mail_zip }}{% endif %}</dd>
+    <dt>Preferred language</dt><dd>{{ customer.get_preferred_language_display|default:"—" }}</dd>
+    <dt>Immigration status</dt><dd>{{ customer.get_immigration_status_display|default:"—" }}</dd>
+    <dt>Household income</dt><dd>{% if customer.household_income is not None %}${{ customer.household_income }}{% else %}—{% endif %}</dd>
+  </dl>
+</div>
+
+<div class="card">
+  <h2>Household</h2>
+  <table>
+    <thead><tr><th>Name</th><th>Relationship</th><th>DOB</th><th>Immigration</th><th>Public coverage</th><th></th></tr></thead>
+    <tbody>
+    {% for m in customer.household_members.all %}
+      <tr>
+        <td>{{ m.first_name }} {{ m.last_name }}</td><td>{{ m.get_relationship_display }}</td>
+        <td>{{ m.date_of_birth|date:"m/d/Y"|default:"—" }}</td><td>{{ m.get_immigration_status_display|default:"—" }}</td>
+        <td>{{ m.get_public_coverage_display|default:"—" }}</td>
+        <td>{% if is_admin %}<form method="post" action="{% url 'customers:member_archive' m.pk %}">{% csrf_token %}<button class="danger">Archive</button></form>{% endif %}</td>
+      </tr>
+    {% empty %}<tr><td colspan="6" class="muted">No spouse or dependents.</td></tr>{% endfor %}
+    </tbody>
+  </table>
+</div>
+
+{% block vault %}{% endblock %}
+
+{% if is_admin %}
+<form method="post" action="{% url 'customers:archive' customer.pk %}">{% csrf_token %}
+  <button class="danger">Archive this customer</button>
+</form>
+{% endif %}
+{% endblock %}

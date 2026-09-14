@@ -1,0 +1,25 @@
+{% extends "base.html" %}{% load customer_tags %}
+{% block title %}Customers · Maian{% endblock %}
+{% block content %}
+<h1>Customers</h1>
+<form class="search" method="get">
+  <input type="search" name="q" value="{{ query }}" placeholder="Name, phone, or date of birth (MM/DD/YYYY)" autofocus>
+  <button type="submit">Search</button>
+</form>
+{% if not query %}<p class="muted">Recently updated</p>{% endif %}
+<table>
+  <thead><tr><th>Name</th><th>Date of birth</th><th>Primary phone</th><th>Language</th></tr></thead>
+  <tbody>
+  {% for c in customers %}
+    <tr>
+      <td><a href="{% url 'customers:detail' c.pk %}">{{ c.last_name }}{% if c.last_name and c.first_name %}, {% endif %}{{ c.first_name }}{% if not c.first_name and not c.last_name %}{{ c }}{% endif %}</a></td>
+      <td>{{ c.date_of_birth|date:"m/d/Y"|default:"—" }}</td>
+      <td>{{ c.phone_primary|phone|default:"—" }}</td>
+      <td>{{ c.get_preferred_language_display|default:"—" }}</td>
+    </tr>
+  {% empty %}
+    <tr><td colspan="4" class="muted">No customers found.</td></tr>
+  {% endfor %}
+  </tbody>
+</table>
+{% endblock %}

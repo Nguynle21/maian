@@ -76,3 +76,27 @@ def test_audit_events_cannot_be_changed_or_removed_in_bulk(make_user):
     with pytest.raises(ValueError):
         AuditEvent.objects.all().delete()
     assert AuditEvent.objects.get().detail == ""
+
+
+def test_staff_gets_403_archiving_customer_through_the_page(make_user, login_verified):
+    client = login_verified(make_user("staff@example.com", STAFF_GROUP))
+    customer = Customer.objects.create(first_name="Lan")
+    response = client.post(f"/customers/{customer.pk}/archive/")
+    assert response.status_code == 403
+    assert Customer.objects.filter(pk=customer.pk).exists()
+
+
+def test_staff_gets_403_archiving_member_through_the_page(make_user, login_verified):
+    client = login_verified(make_user("staff@example.com", STAFF_GROUP))
+    customer = Customer.objects.create(first_name="Lan")
+    member = HouseholdMember.objects.create(customer=customer, relationship=Relationship.DEPENDENT)
+    response = client.post(f"/customers/members/{member.pk}/archive/")
+    assert response.status_code == 403
+    assert HouseholdMember.objects.filter(pk=member.pk).exists()
+
+
+def test_staff_can_open_intake_and_record(make_user, login_verified):
+    client = login_verified(make_user("staff@example.com", STAFF_GROUP))
+    customer = Customer.objects.create(first_name="Lan")
+    assert client.get("/customers/new/").status_code == 200
+    assert client.get(f"/customers/{customer.pk}/").status_code == 200

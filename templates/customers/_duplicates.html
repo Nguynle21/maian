@@ -1,0 +1,8 @@
+{% load customer_tags %}{% if duplicates %}
+<div class="warning">
+  <strong>Possible duplicate.</strong> Check before continuing:
+  <ul>{% for c in duplicates %}
+    <li><a href="{% url 'customers:detail' c.pk %}" target="_blank">{{ c }}</a> · DOB {{ c.date_of_birth|default:"—" }} · {{ c.phone_primary|phone|default:"no phone" }}</li>
+  {% endfor %}</ul>
+</div>
+{% endif %}
